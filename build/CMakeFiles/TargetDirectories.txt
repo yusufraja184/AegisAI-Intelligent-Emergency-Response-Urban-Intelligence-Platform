@@ -1,3 +1,0 @@
-C:/AegisAI/build/CMakeFiles/AegisAI.dir
-C:/AegisAI/build/CMakeFiles/edit_cache.dir
-C:/AegisAI/build/CMakeFiles/rebuild_cache.dir
