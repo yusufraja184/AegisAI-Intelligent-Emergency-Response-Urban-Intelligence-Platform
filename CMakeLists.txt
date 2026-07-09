@@ -1,12 +1,9 @@
-cmake_minimum_required(VERSION 3.15)
-
-project(AegisAI)
-
-set(CMAKE_CXX_STANDARD 17)
-
-include_directories(backend/include)
-
 add_executable(AegisAI
     backend/src/main.cpp
     backend/src/core/Application.cpp
+    backend/src/core/Logger.cpp
+    backend/src/core/Config.cpp
+    backend/src/utils/DateTime.cpp
+    backend/src/utils/FileManager.cpp
+    backend/src/core/ExceptionHandler.cpp
 )
