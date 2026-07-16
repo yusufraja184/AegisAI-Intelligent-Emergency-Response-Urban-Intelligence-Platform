@@ -15,4 +15,9 @@ add_executable(AegisAI
     backend/src/models/Hospital.cpp
     backend/src/models/Dispatcher.cpp
     backend/src/models/Route.cpp
+    backend/src/services/EmergencyService.cpp
+    backend/src/services/DispatchService.cpp
+    backend/src/services/RouteService.cpp
+    backend/src/services/HospitalService.cpp
+    backend/src/controllers/EmergencyController.cpp
 )
