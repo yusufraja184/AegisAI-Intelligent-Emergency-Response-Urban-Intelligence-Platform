@@ -1,3 +1,4 @@
+#include "../../include/algorithms/Dijkstra.h"
 #include "../../include/services/RouteService.h"
 #include <cmath>
 
@@ -11,4 +12,14 @@ double RouteService::calculateDistance(
     double dy = lon2 - lon1;
 
     return std::sqrt(dx * dx + dy * dy);
+}
+
+
+std::vector<int> RouteService::findShortestRoute(
+    const std::vector<std::vector<int>>& graph,
+    int source)
+{
+    Dijkstra dijkstra;
+
+    return dijkstra.shortestPath(graph, source);
 }

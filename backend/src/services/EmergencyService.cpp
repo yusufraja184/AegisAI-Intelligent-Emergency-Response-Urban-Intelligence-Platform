@@ -3,23 +3,38 @@
 
 using namespace std;
 
+EmergencyService::EmergencyService()
+    : database("AegisAI.db")
+{
+    database.connect();
+
+    database.createEmergencyTable();
+}
+
 void EmergencyService::addEmergency(const Emergency& emergency)
 {
+    // Store in memory
     emergencies.push_back(emergency);
+
+    // Add to priority queue
+    priorityQueue.push(emergency);
+
+    // Save to database
+    database.insertEmergency(
+        emergency.getEmergencyId(),
+        emergency.getCitizenId(),
+        emergency.getEmergencyType(),
+        emergency.getSeverity(),
+        emergency.getLatitude(),
+        emergency.getLongitude(),
+        emergency.getStatus(),
+        emergency.getTimestamp()
+    );
 }
 
 bool EmergencyService::removeEmergency(int emergencyId)
 {
-    for(auto it = emergencies.begin(); it != emergencies.end(); it++)
-    {
-        if(it->getEmergencyId() == emergencyId)
-        {
-            emergencies.erase(it);
-            return true;
-        }
-    }
-
-    return false;
+    return database.deleteEmergency(emergencyId);
 }
 
 Emergency* EmergencyService::findEmergencyById(int emergencyId)
@@ -37,16 +52,12 @@ Emergency* EmergencyService::findEmergencyById(int emergencyId)
 
 bool EmergencyService::updateEmergencyStatus(
     int emergencyId,
-    const string& newStatus)
+    const std::string& newStatus)
 {
-    Emergency* emergency = findEmergencyById(emergencyId);
-
-    if(emergency == nullptr)
-        return false;
-
-    emergency->setStatus(newStatus);
-
-    return true;
+    return database.updateEmergencyStatus(
+        emergencyId,
+        newStatus
+    );
 }
 
 vector<Emergency> EmergencyService::getPendingEmergencies() const
@@ -77,18 +88,38 @@ vector<Emergency> EmergencyService::getHighPriorityEmergencies(
 }
 
 
-void EmergencyService::displayAllEmergencies() const
+void EmergencyService::displayAllEmergencies()
 {
-    cout << "\n===== Emergency List =====\n";
-
-    for(const auto& emergency : emergencies)
-    {
-        emergency.display();
-        cout << "--------------------------" << endl;
-    }
+    database.displayAllEmergencies();
 }
 
-int EmergencyService::getEmergencyCount() const
+
+
+Emergency EmergencyService::getNextEmergency()
 {
-    return emergencies.size();
+    Emergency emergency = priorityQueue.top();
+
+    priorityQueue.pop();
+
+    return emergency;
+}
+
+void EmergencyService::processNextEmergency()
+{
+    if(priorityQueue.empty())
+    {
+        std::cout << "No pending emergencies.\n";
+        return;
+    }
+
+    Emergency emergency = priorityQueue.top();
+    priorityQueue.pop();
+
+    std::cout << "\nProcessing Emergency\n";
+    emergency.display();
+}
+
+bool EmergencyService::hasPendingEmergency() const
+{
+    return !priorityQueue.empty();
 }

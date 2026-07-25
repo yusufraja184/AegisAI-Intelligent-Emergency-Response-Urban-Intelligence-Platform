@@ -1,16 +1,28 @@
 #ifndef EMERGENCY_SERVICE_H
 #define EMERGENCY_SERVICE_H
 
+#include "../database/DatabaseManager.h"
 #include "../models/Emergency.h"
 #include <vector>
+#include "../algorithms/EmergencyPriorityQueue.h"
 
 class EmergencyService
 {
 private:
     std::vector<Emergency> emergencies;
+    EmergencyPriorityQueue priorityQueue;
+
+    DatabaseManager database;
 
 public:
+    EmergencyService();
     void addEmergency(const Emergency& emergency);
+
+    Emergency getNextEmergency();
+
+    void processNextEmergency();
+
+    bool hasPendingEmergency() const;
 
     bool removeEmergency(int emergencyId);
 
@@ -27,7 +39,7 @@ std::vector<Emergency> getHighPriorityEmergencies(
     int minimumSeverity
 ) const;
 
-    void displayAllEmergencies() const;
+    void displayAllEmergencies();
 
     int getEmergencyCount() const;
 };

@@ -20,4 +20,10 @@ add_executable(AegisAI
     backend/src/services/RouteService.cpp
     backend/src/services/HospitalService.cpp
     backend/src/controllers/EmergencyController.cpp
+    backend/src/algorithms/EmergencyPriorityQueue.cpp
+    backend/src/algorithms/Dijkstra.cpp
+    backend/src/database/DatabaseManager.cpp
+
 )
+
+target_link_libraries(AegisAI sqlite3)

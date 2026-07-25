@@ -14,8 +14,11 @@ private:
     HospitalService hospitalService;
     RouteService routeService;
 
-public:
-    void processEmergency();
-};
+    void addEmergency();
+    void updateEmergencyStatus();
+    void deleteEmergency();
 
+public:
+    bool processEmergency();
+};
 #endif

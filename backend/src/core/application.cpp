@@ -60,7 +60,15 @@ void Application::initialize()
 
 void Application::run()
 {
+    Logger::info("========== AegisAI Started ==========");
     Logger::info("Application Running...");
+
+    while (emergencyController.processEmergency())
+    {
+        // Keep showing the menu until the user chooses Exit
+    }
+
+    Logger::info("========== AegisAI Finished ==========");
 }
 
 void Application::shutdown()
