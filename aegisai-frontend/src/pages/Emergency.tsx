@@ -2,40 +2,34 @@ import { useState } from "react";
 import EmergencyModal from "../components/EmergencyModal";
 import { Plus } from "lucide-react";
 import EmergencyTable from "../components/EmergencyTable";
+import { useEmergencies } from "../context/EmergencyContext";
+import { useHospitals } from "../context/HospitalContext";
+import { useAmbulances } from "../context/AmbulanceContext";
 
 export default function Emergency() {
+  const { emergencies, addEmergency, updateEmergency, deleteEmergency } =
+    useEmergencies();
+
+    const handleStatusChange = (id: string, status: string) => {
+  const emergency = emergencies.find(
+    (item) => item.id === id
+  );
+
+  if (!emergency) return;
+
+  updateEmergency({
+    ...emergency,
+    status,
+  });
+};
+
+    const { dischargePatient, admitPatient } = useHospitals();
+    const { ambulances, updateAmbulance } = useAmbulances();
 
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [severity, setSeverity] = useState("All Severity");
   const [editingEmergency, setEditingEmergency] = useState<any>(null);
-  const [emergencies, setEmergencies] = useState([
-
-  {
-    id: "EM-101",
-    patient: "Rahul Sharma",
-    type: "Cardiac Arrest",
-    severity: "Critical",
-    ambulance: "AMB-12",
-    status: "Dispatched",
-  },
-  {
-    id: "EM-102",
-    patient: "Priya Singh",
-    type: "Road Accident",
-    severity: "High",
-    ambulance: "AMB-08",
-    status: "En Route",
-  },
-  {
-    id: "EM-103",
-    patient: "Aman Khan",
-    type: "Stroke",
-    severity: "Critical",
-    ambulance: "AMB-04",
-    status: "Hospitalized",
-  },
-]);
 
 const filteredEmergencies = emergencies.filter((emergency) => {
 
@@ -121,56 +115,135 @@ const filteredEmergencies = emergencies.filter((emergency) => {
           <p className="text-4xl font-bold text-green-600 mt-2">126</p>
         </div>
       </div>
-      <EmergencyTable
-          emergencies={filteredEmergencies}
-          onEdit={(emergency) => {
-              setEditingEmergency(emergency);
-              setOpen(true);
-          }}
-          onDelete={(id) => {
-              setEmergencies((prev) =>
-                prev.filter((emergency) => emergency.id !== id)
-              );
-          }}
-      />
+<EmergencyTable
+  emergencies={filteredEmergencies}
+  onEdit={(emergency) => {
+    setEditingEmergency(emergency);
+    setOpen(true);
+  }}
+  onDelete={(id) => {
+  const emergency = emergencies.find(
+    (item) => item.id === id
+  );
 
-      <EmergencyModal
-        open={open}
-        editingEmergency={editingEmergency}
-        onClose={() => {
-            setOpen(false);
-            setEditingEmergency(null);
-        }}
-        onSave={(newEmergency) => {
+  if (!emergency) return;
 
-    if (editingEmergency) {
+  // Release hospital bed
+  if (
+    emergency.hospital &&
+    emergency.hospital !== "Pending"
+  ) {
+    dischargePatient(emergency.hospital);
+  }
 
-        setEmergencies((prev) =>
-            prev.map((emergency) =>
-                emergency.id === editingEmergency.id
-                    ? {
-                          ...newEmergency,
-                          id: editingEmergency.id,
-                          ambulance: editingEmergency.ambulance,
-                          status: editingEmergency.status,
-                      }
-                    : emergency
-            )
-        );
+  // Release ambulance
+  if (
+    emergency.ambulance &&
+    emergency.ambulance !== "Pending"
+  ) {
+    const ambulance = ambulances.find(
+      (item) => item.id === emergency.ambulance
+    );
 
-    } else {
+    if (ambulance) {
+      updateAmbulance({
+        ...ambulance,
+        status: "Available",
+      });
+    }
+  }
 
-        setEmergencies((prev) => [
-            newEmergency,
-            ...prev,
-        ]);
+  // Delete emergency
+  deleteEmergency(id);
+}}
+onStatusChange={handleStatusChange}
+/>
 
+<EmergencyModal
+  open={open}
+  editingEmergency={editingEmergency}
+  onClose={() => {
+    setOpen(false);
+    setEditingEmergency(null);
+  }}
+onSave={(newEmergency) => {
+  if (editingEmergency) {
+    const oldHospital = editingEmergency.hospital;
+    const newHospital = newEmergency.hospital;
+
+    const oldAmbulance = editingEmergency.ambulance;
+    const newAmbulance = newEmergency.ambulance;
+
+    // Handle hospital change
+    if (oldHospital !== newHospital) {
+      // Release old hospital bed
+      if (
+        oldHospital &&
+        oldHospital !== "Pending"
+      ) {
+        dischargePatient(oldHospital);
+      }
+
+      // Allocate new hospital bed
+      if (
+        newHospital &&
+        newHospital !== "Pending"
+      ) {
+        admitPatient(newHospital);
+      }
     }
 
-    setEditingEmergency(null);
+    // Handle ambulance change
+    if (oldAmbulance !== newAmbulance) {
+      // Release old ambulance
+      if (
+        oldAmbulance &&
+        oldAmbulance !== "Pending"
+      ) {
+        const oldAmbulanceData = ambulances.find(
+          (item) => item.id === oldAmbulance
+        );
 
+        if (oldAmbulanceData) {
+          updateAmbulance({
+            ...oldAmbulanceData,
+            status: "Available",
+          });
+        }
+      }
+
+      // Assign new ambulance
+      if (
+        newAmbulance &&
+        newAmbulance !== "Pending"
+      ) {
+        const newAmbulanceData = ambulances.find(
+          (item) => item.id === newAmbulance
+        );
+
+        if (newAmbulanceData) {
+          updateAmbulance({
+            ...newAmbulanceData,
+            status: "Busy",
+          });
+        }
+      }
+    }
+
+    updateEmergency({
+      ...newEmergency,
+      id: editingEmergency.id,
+      ambulance: newEmergency.ambulance,
+      status: editingEmergency.status,
+    });
+  } else {
+    addEmergency(newEmergency);
+  }
+
+  setEditingEmergency(null);
+  setOpen(false);
 }}
-      />
+/>
     </div> 
   );
 }
